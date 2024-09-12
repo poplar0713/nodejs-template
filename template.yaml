@@ -90,12 +90,17 @@ spec:
         - ARGOCD_URL
         - ARGOCD_USERNAME
         - ARGOCD_PASSWORD
+        - K8S_NAMESPACE
       properties:
         port:
           title: 포트
           type: number
           default: 80
           description: 애플리케이션에서 사용할 포트를 입력해주세요.
+        K8S_NAMESPACE:
+          title: 네임스페이스
+          type: string
+          description: 배포할 Kubernetes 네임스페이스를 입력해주세요.
         ARGOCD_URL:
           title: ArgoCD URL
           type: string
@@ -146,6 +151,7 @@ spec:
           ARGOCD_URL: ${{ parameters.ARGOCD_URL }}
           ARGOCD_USERNAME: ${{ parameters.ARGOCD_USERNAME }}
           ARGOCD_PASSWORD: ${{ parameters.ARGOCD_PASSWORD }}
+          K8S_NAMESPACE: ${{ parameters.K8S_NAMESPACE }}
 
     - id: create-env-file
       name: .env.production 파일 생성
@@ -169,6 +175,7 @@ spec:
           ARGOCD_URL=${{ parameters.ARGOCD_URL }}
           ARGOCD_USERNAME=${{ parameters.ARGOCD_USERNAME }}
           ARGOCD_PASSWORD=${{ parameters.ARGOCD_PASSWORD }}
+          K8S_NAMESPACE= ${{ parameters.K8S_NAMESPACE }}
 
     - id: github-actions-template
       name: GitHub Actions 구성 생성
