@@ -46,7 +46,6 @@ spec:
         - imageregistry
         - reponame
         - namespace
-        - tag
         - AZURE_CLIENT_ID
         - AZURE_TENANT_ID
         - AZURE_SUBSCRIPTION_ID
