@@ -45,7 +45,6 @@ spec:
         - acrName
         - imageregistry
         - reponame
-        - namespace
         - AZURE_CLIENT_ID
         - AZURE_TENANT_ID
         - AZURE_SUBSCRIPTION_ID
@@ -63,14 +62,6 @@ spec:
           enumNames:
             - Azure Container Registry
           description: 사용할 이미지 레지스트리를 선택해주세요.
-        reponame:
-          title: ACR 리포지토리 이름
-          type: string
-          description: ACR 내의 리포지토리 이름을 입력해주세요.
-        namespace:
-          title: ACR 네임스페이스
-          type: string
-          description: ACR 네임스페이스를 입력해주세요.
         AZURE_CLIENT_ID:
           title: Azure 클라이언트 ID
           type: string
@@ -83,6 +74,10 @@ spec:
           title: Azure 구독 ID
           type: string
           description: 구독 ID를 입력해주세요.
+        reponame:
+          title: ACR 리포지토리 이름
+          type: string
+          description: ACR 내의 리포지토리 이름을 입력해주세요.
     - title: CD에 대한 정보를 입력해주세요
       required:
         - port
