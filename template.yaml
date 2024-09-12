@@ -2,8 +2,8 @@ apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
   name: nodejs-backend-template
-  title: Create a Node.js Backend application
-  description: Node.js 프로젝트를 생성합니다.
+  title: NodeJs + Helm 배포 Template
+  description: Node.js 기반 MSA 프로젝트를 생성합니다
   tags:
     - recommended
     - nodejs
@@ -22,7 +22,7 @@ spec:
         name:
           title: 이름
           type: string
-          description: 컴포넌트의 고유한 이름을 입력해주세요.
+          description: 프로젝트의 이름을 입력해주세요. (고유)
           ui:autofocus: true
         orgName:
           title: 조직 이름
@@ -31,7 +31,7 @@ spec:
         owner:
           title: 소유자
           type: string
-          description: 컴포넌트의 소유자를 입력해주세요.
+          description: 프로젝트의 소유 그룹을 지정해 주세요
           ui:field: OwnerPicker
           ui:options:
             allowedKinds:
@@ -39,8 +39,8 @@ spec:
         description:
           title: 설명
           type: string
-          description: 이 컴포넌트에 대한 간단한 설명을 입력해주세요.
-    - title: CI 방법에 대한 정보를 입력해주세요
+          description: 이 프로젝트에 대한 간단한 설명을 입력해주세요.
+    - title: CI에 대한 정보를 입력해주세요
       required:
         - acrName
         - imageregistry
@@ -72,10 +72,6 @@ spec:
           title: ACR 네임스페이스
           type: string
           description: ACR 네임스페이스를 입력해주세요.
-        tag:
-          title: 배포 태그
-          type: string
-          description: ArgoCD에서 사용할 배포 식별 태그를 입력해주세요.
         AZURE_CLIENT_ID:
           title: Azure 클라이언트 ID
           type: string
@@ -88,16 +84,32 @@ spec:
           title: Azure 구독 ID
           type: string
           description: 구독 ID를 입력해주세요.
-    - title: CD 방법에 대한 정보를 입력해주세요
+    - title: CD에 대한 정보를 입력해주세요
       required:
         - port
+        - ARGOCD_URL
+        - ARGOCD_USERNAME
+        - ARGOCD_PASSWORD
       properties:
         port:
           title: 포트
           type: number
           default: 80
           description: 애플리케이션에서 사용할 포트를 입력해주세요.
-    - title: 저장소 위치를 선택해주세요
+        ARGOCD_URL:
+          title: ArgoCD URL
+          type: string
+          description: ArgoCD 서버 URL를 입력해주세요.
+        ARGOCD_USERNAME:
+          title: ArgoCD ID
+          type: string
+          description: ArgoCD 사용자 ID를 입력해주세요.
+        ARGOCD_PASSWORD:
+          title: ArgoCD 비밀번호
+          type: string
+          sensitive: true
+          description: ArgoCD 사용자 비밀번호를 입력해주세요.
+    - title: 저장소 위치를 선택해주세요.
       required:
         - repoUrl
       properties:
@@ -131,6 +143,9 @@ spec:
           AZURE_CLIENT_ID: ${{ parameters.AZURE_CLIENT_ID }}
           AZURE_TENANT_ID: ${{ parameters.AZURE_TENANT_ID }}
           AZURE_SUBSCRIPTION_ID: ${{ parameters.AZURE_SUBSCRIPTION_ID }}
+          ARGOCD_URL: ${{ parameters.ARGOCD_URL }}
+          ARGOCD_USERNAME: ${{ parameters.ARGOCD_USERNAME }}
+          ARGOCD_PASSWORD: ${{ parameters.ARGOCD_PASSWORD }}
 
     - id: create-env-file
       name: .env.production 파일 생성
@@ -138,7 +153,7 @@ spec:
       input:
         targetPath: ./.env.production
         content: |
-          NAME=${{ parameters.name }}
+          PROJECT_NAME=${{ parameters.name }}
           ORG_NAME=${{ parameters.orgName }}
           OWNER=${{ parameters.owner }}
           DESCRIPTION=${{ parameters.description }}
@@ -147,11 +162,13 @@ spec:
           REPO_NAME=${{ parameters.reponame }}
           NAMESPACE=${{ parameters.namespace }}
           PORT=${{ parameters.port }}
-          TAG=${{ parameters.tag }}
           REPO_URL=${{ parameters.repoUrl }}
           AZURE_CLIENT_ID=${{ parameters.AZURE_CLIENT_ID }}
           AZURE_TENANT_ID=${{ parameters.AZURE_TENANT_ID }}
           AZURE_SUBSCRIPTION_ID=${{ parameters.AZURE_SUBSCRIPTION_ID }}
+          ARGOCD_URL=${{ parameters.ARGOCD_URL }}
+          ARGOCD_USERNAME=${{ parameters.ARGOCD_USERNAME }}
+          ARGOCD_PASSWORD=${{ parameters.ARGOCD_PASSWORD }}
 
     - id: github-actions-template
       name: GitHub Actions 구성 생성
