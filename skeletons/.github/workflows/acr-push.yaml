@@ -1,0 +1,84 @@
+name: CI/CD Pipeline for Node.js App on AKS using ACR and ArgoCD
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Check out the repository code
+      - name: Check out repository code
+        uses: actions/checkout@v3
+
+      # Step 2: Load environment variables from .env.production
+      - name: Load environment variables from .env.production
+        run: |
+          set -o allexport
+          source .env.production
+          set +o allexport
+
+      # Step 3: Generate timestamp for image tag
+      - name: Generate timestamp for image tag
+        run: echo "TAG=$(date +'%Y%m%d%H%M%S')" >> $GITHUB_ENV
+
+      # Step 4: Log in to Azure using GitHub Action's Azure Login action
+      - name: Log in to Azure
+        uses: azure/login@v1
+        with:
+          client-id: $AZURE_CLIENT_ID
+          tenant-id: $env.AZURE_TENANT_ID
+          subscription-id: $env.AZURE_SUBSCRIPTION_ID
+
+      # Step 5: Log in to Azure Container Registry (ACR)
+      - name: Log in to Azure Container Registry (ACR)
+        run: |
+          az acr login --name $ACR_NAME
+
+      # Step 6: Build and Push Docker image to ACR with timestamp tag
+      - name: Build and Push Docker image to ACR
+        run: |
+          docker build -t $ACR_NAME.azurecr.io/$REPO_NAME:$TAG .
+          docker push $ACR_NAME.azurecr.io/$REPO_NAME:$TAG
+
+      # Step 7: Install ArgoCD CLI
+      - name: Install ArgoCD CLI
+        run: |
+          curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
+          chmod +x /usr/local/bin/argocd
+
+      # Step 8: ArgoCD Login
+      - name: Log in to ArgoCD
+        run: |
+          argocd login $ARGOCD_URL --username $ARGOCD_USERNAME --password $ARGOCD_PASSWORD --insecure
+
+      # Step 9: Check if ArgoCD application already exists
+      - name: Check if ArgoCD application exists
+        id: check-app
+        run: |
+          if argocd app get $PROJECT_NAME; then
+            echo "ArgoCD application exists."
+            echo "app_exists=true" >> $GITHUB_ENV
+          else
+            echo "ArgoCD application does not exist."
+            echo "app_exists=false" >> $GITHUB_ENV
+          fi
+
+      # Step 10: Create ArgoCD application if it does not exist
+      - name: Create ArgoCD application using Helm
+        if: env.app_exists == 'false'
+        run: |
+          argocd app create $PROJECT_NAME \
+            --repo $repoUrl \
+            --path skeletons/helm \
+            --dest-server https://kubernetes.default.svc \
+            --dest-namespace $K8S_NAMESPACE \
+            --helm-set image.repository=$ACR_NAME.azurecr.io/$REPO_NAME \
+            --helm-set image.tag=$TAG \
+            --sync-policy automated
+
+      # Step 11: Sync the ArgoCD application (for both new and existing apps)
+      - name: Sync ArgoCD application
+        run: |
+          argocd app sync $PROJECT_NAME

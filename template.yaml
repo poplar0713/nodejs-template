@@ -1,0 +1,210 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: nodejs-backend-template
+  title: Create a Node.js Backend application
+  description: Node.js 프로젝트를 생성합니다.
+  tags:
+    - recommended
+    - nodejs
+    - javascript
+    - typescript
+    - express
+    - argocd
+spec:
+  owner: user:guest
+  type: service
+  parameters:
+    - title: 새로운 컴포넌트 정보를 입력해주세요
+      required:
+        - name
+      properties:
+        name:
+          title: 이름
+          type: string
+          description: 컴포넌트의 고유한 이름을 입력해주세요.
+          ui:autofocus: true
+        orgName:
+          title: 조직 이름
+          type: string
+          description: 조직의 이름을 입력해주세요.
+        owner:
+          title: 소유자
+          type: string
+          description: 컴포넌트의 소유자를 입력해주세요.
+          ui:field: OwnerPicker
+          ui:options:
+            allowedKinds:
+            - Group
+        description:
+          title: 설명
+          type: string
+          description: 이 컴포넌트에 대한 간단한 설명을 입력해주세요.
+    - title: CI 방법에 대한 정보를 입력해주세요
+      required:
+        - acrName
+        - imageregistry
+        - reponame
+        - namespace
+        - tag
+        - AZURE_CLIENT_ID
+        - AZURE_TENANT_ID
+        - AZURE_SUBSCRIPTION_ID
+      properties:
+        acrName:
+          title: ACR 이름
+          type: string
+          description: 이미지를 푸시할 Azure Container Registry의 이름을 입력해주세요.
+        imageregistry:
+          title: 이미지 레지스트리 선택
+          type: string
+          default: acr
+          enum:
+            - acr
+          enumNames:
+            - Azure Container Registry
+          description: 사용할 이미지 레지스트리를 선택해주세요.
+        reponame:
+          title: ACR 리포지토리 이름
+          type: string
+          description: ACR 내의 리포지토리 이름을 입력해주세요.
+        namespace:
+          title: ACR 네임스페이스
+          type: string
+          description: ACR 네임스페이스를 입력해주세요.
+        tag:
+          title: 배포 태그
+          type: string
+          description: ArgoCD에서 사용할 배포 식별 태그를 입력해주세요.
+        AZURE_CLIENT_ID:
+          title: Azure 클라이언트 ID
+          type: string
+          description: 애플리케이션(클라이언트) ID를 입력해주세요.
+        AZURE_TENANT_ID:
+          title: Azure 테넌트 ID
+          type: string
+          description: 디렉터리(테넌트) ID를 입력해주세요.
+        AZURE_SUBSCRIPTION_ID:
+          title: Azure 구독 ID
+          type: string
+          description: 구독 ID를 입력해주세요.
+    - title: CD 방법에 대한 정보를 입력해주세요
+      required:
+        - port
+      properties:
+        port:
+          title: 포트
+          type: number
+          default: 80
+          description: 애플리케이션에서 사용할 포트를 입력해주세요.
+    - title: 저장소 위치를 선택해주세요
+      required:
+        - repoUrl
+      properties:
+        repoUrl:
+          title: GitHub 저장소 위치
+          type: string
+          ui:field: RepoUrlPicker
+          ui:options:
+            allowedHosts:
+              - github.com
+          description: 저장소의 URL을 입력해주세요.
+
+  steps:
+    - id: fetch-base
+      name: 기본 템플릿 가져오기
+      action: fetch:template
+      input:
+        url: ./content/
+        values:
+          name: ${{ parameters.name }}
+          orgName: ${{ parameters.orgName }}
+          owner: ${{ parameters.owner }}
+          description: ${{ parameters.description }}
+          acrName: ${{ parameters.acrName }}
+          imageregistry: ${{ parameters.imageregistry }}
+          reponame: ${{ parameters.reponame }}
+          namespace: ${{ parameters.namespace }}
+          port: ${{ parameters.port }}
+          tag: ${{ parameters.tag }}
+          repoUrl: ${{ parameters.repoUrl }}
+          AZURE_CLIENT_ID: ${{ parameters.AZURE_CLIENT_ID }}
+          AZURE_TENANT_ID: ${{ parameters.AZURE_TENANT_ID }}
+          AZURE_SUBSCRIPTION_ID: ${{ parameters.AZURE_SUBSCRIPTION_ID }}
+
+    - id: create-env-file
+      name: .env.production 파일 생성
+      action: write:file
+      input:
+        targetPath: ./.env.production
+        content: |
+          NAME=${{ parameters.name }}
+          ORG_NAME=${{ parameters.orgName }}
+          OWNER=${{ parameters.owner }}
+          DESCRIPTION=${{ parameters.description }}
+          ACR_NAME=${{ parameters.acrName }}
+          IMAGE_REGISTRY=${{ parameters.imageregistry }}
+          REPO_NAME=${{ parameters.reponame }}
+          NAMESPACE=${{ parameters.namespace }}
+          PORT=${{ parameters.port }}
+          TAG=${{ parameters.tag }}
+          REPO_URL=${{ parameters.repoUrl }}
+          AZURE_CLIENT_ID=${{ parameters.AZURE_CLIENT_ID }}
+          AZURE_TENANT_ID=${{ parameters.AZURE_TENANT_ID }}
+          AZURE_SUBSCRIPTION_ID=${{ parameters.AZURE_SUBSCRIPTION_ID }}
+
+    - id: github-actions-template
+      name: GitHub Actions 구성 생성
+      action: fetch:template
+      input:
+        url: ./skeletons/
+        copyWithoutTemplating:
+          - .github/workflows/
+
+    - id: helm-template
+      name: Helm 구성 생성
+      action: fetch:template
+      input:
+        url: ./skeletons/
+        copyWithoutTemplating:
+          - helm/
+
+    - id: catalog-Template
+      name: 카탈로그 정보 생성
+      action: fetch:template
+      input:
+        url: ./catalog-info/
+        values:
+          name: ${{ parameters.name }}
+          orgName: ${{ parameters.orgName }}
+          owner: ${{ parameters.owner }}
+          description: ${{ parameters.description }}
+
+    - id: publish
+      name: 소스 코드 저장소에 게시
+      action: publish:github
+      input:
+        description: 이 저장소는 ${{ parameters.name }}입니다.
+        repoUrl: ${{ parameters.repoUrl }}
+        defaultBranch: main
+
+    - id: register
+      name: 카탈로그에 등록
+      action: catalog:register
+      input:
+        repoContentsUrl: ${{ steps['publish'].output.repoContentsUrl }}
+        catalogInfoPath: 'catalog-info.yaml'
+
+    - id: log-message
+      name: 로그 메시지
+      action: debug:log
+      input:
+        message: ${{ steps['publish'].output.repoContentsUrl }}
+
+  output:
+    links:
+      - title: 저장소
+        url: ${{ steps['publish'].output.remoteUrl }}
+      - title: 카탈로그에서 열기
+        icon: catalog
+        entityRef: ${{ steps['register'].output.entityRef }}
