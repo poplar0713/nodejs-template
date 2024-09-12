@@ -48,6 +48,7 @@ spec:
         - AZURE_CLIENT_ID
         - AZURE_TENANT_ID
         - AZURE_SUBSCRIPTION_ID
+        - RG_NAME
       properties:
         acrName:
           title: ACR 이름
@@ -78,6 +79,10 @@ spec:
           title: ACR 리포지토리 이름
           type: string
           description: ACR 내의 리포지토리 이름을 입력해주세요.
+        RG_NAME:
+          title: Azure 리소스 그룹명
+          type: string
+          description: Azure 리소스 그룹명을 입력해주세요
     - title: CD에 대한 정보를 입력해주세요
       required:
         - port
@@ -142,6 +147,7 @@ spec:
           AZURE_CLIENT_ID: ${{ parameters.AZURE_CLIENT_ID }}
           AZURE_TENANT_ID: ${{ parameters.AZURE_TENANT_ID }}
           AZURE_SUBSCRIPTION_ID: ${{ parameters.AZURE_SUBSCRIPTION_ID }}
+          RG_NAME: ${{ parameters.RG_NAME }}
           ARGOCD_URL: ${{ parameters.ARGOCD_URL }}
           ARGOCD_USERNAME: ${{ parameters.ARGOCD_USERNAME }}
           ARGOCD_PASSWORD: ${{ parameters.ARGOCD_PASSWORD }}
@@ -166,6 +172,7 @@ spec:
           AZURE_CLIENT_ID=${{ parameters.AZURE_CLIENT_ID }}
           AZURE_TENANT_ID=${{ parameters.AZURE_TENANT_ID }}
           AZURE_SUBSCRIPTION_ID=${{ parameters.AZURE_SUBSCRIPTION_ID }}
+          RG_NAME=${{ parameters.RG_NAME }}
           ARGOCD_URL=${{ parameters.ARGOCD_URL }}
           ARGOCD_USERNAME=${{ parameters.ARGOCD_USERNAME }}
           ARGOCD_PASSWORD=${{ parameters.ARGOCD_PASSWORD }}
