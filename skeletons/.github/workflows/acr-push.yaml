@@ -31,29 +31,40 @@ jobs:
           tenant-id: $AZURE_TENANT_ID
           subscription-id: $AZURE_SUBSCRIPTION_ID
 
-      # Step 5: Log in to Azure Container Registry (ACR)
+      # Step 5: Check if ACR exists in the resource group, create if not
+      - name: Check if ACR exists, create if not
+        run: |
+          ACR_EXISTS=$(az acr show --resource-group $RG_NAME --name $ACR_NAME --query "name" --output tsv || echo "NOT_FOUND")
+          if [ "$ACR_EXISTS" = "NOT_FOUND" ]; then
+            echo "ACR does not exist. Creating ACR..."
+            az acr create --resource-group $RG_NAME --name $ACR_NAME --sku Basic
+          else
+            echo "ACR already exists."
+          fi
+
+      # Step 6: Log in to Azure Container Registry (ACR)
       - name: Log in to Azure Container Registry (ACR)
         run: |
           az acr login --name $ACR_NAME
 
-      # Step 6: Build and Push Docker image to ACR with timestamp tag
+      # Step 7: Build and Push Docker image to ACR with timestamp tag
       - name: Build and Push Docker image to ACR
         run: |
           docker build -t $ACR_NAME.azurecr.io/$REPO_NAME:$TAG .
           docker push $ACR_NAME.azurecr.io/$REPO_NAME:$TAG
 
-      # Step 7: Install ArgoCD CLI
+      # Step 8: Install ArgoCD CLI
       - name: Install ArgoCD CLI
         run: |
           curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
           chmod +x /usr/local/bin/argocd
 
-      # Step 8: ArgoCD Login
+      # Step 9: ArgoCD Login
       - name: Log in to ArgoCD
         run: |
           argocd login $ARGOCD_URL --username $ARGOCD_USERNAME --password $ARGOCD_PASSWORD --insecure
 
-      # Step 9: Check if ArgoCD application already exists
+      # Step 10: Check if ArgoCD application already exists
       - name: Check if ArgoCD application exists
         id: check-app
         run: |
@@ -65,7 +76,7 @@ jobs:
             echo "app_exists=false" >> $GITHUB_ENV
           fi
 
-      # Step 10: Create ArgoCD application if it does not exist
+      # Step 11: Create ArgoCD application if it does not exist
       - name: Create ArgoCD application using Helm
         if: env.app_exists == 'false'
         run: |
@@ -78,7 +89,7 @@ jobs:
             --helm-set image.tag=$TAG \
             --sync-policy automated
 
-      # Step 11: Sync the ArgoCD application (for both new and existing apps)
+      # Step 12: Sync the ArgoCD application (for both new and existing apps)
       - name: Sync ArgoCD application
         run: |
           argocd app sync $PROJECT_NAME

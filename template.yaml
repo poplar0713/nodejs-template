@@ -176,7 +176,7 @@ spec:
           ARGOCD_URL=${{ parameters.ARGOCD_URL }}
           ARGOCD_USERNAME=${{ parameters.ARGOCD_USERNAME }}
           ARGOCD_PASSWORD=${{ parameters.ARGOCD_PASSWORD }}
-          K8S_NAMESPACE= ${{ parameters.K8S_NAMESPACE }}
+          K8S_NAMESPACE=${{ parameters.K8S_NAMESPACE }}
 
     - id: github-actions-template
       name: GitHub Actions 구성 생성
