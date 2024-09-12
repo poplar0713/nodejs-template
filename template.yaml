@@ -154,29 +154,29 @@ spec:
           K8S_NAMESPACE: ${{ parameters.K8S_NAMESPACE }}
 
     - id: create-env-file
-      name: .env.production 파일 생성
-      action: write:file
+      name: .env.production 파일 저장
+      action: fetch:template
       input:
-        targetPath: ./.env.production
-        content: |
-          PROJECT_NAME=${{ parameters.name }}
-          ORG_NAME=${{ parameters.orgName }}
-          OWNER=${{ parameters.owner }}
-          DESCRIPTION=${{ parameters.description }}
-          ACR_NAME=${{ parameters.acrName }}
-          IMAGE_REGISTRY=${{ parameters.imageregistry }}
-          REPO_NAME=${{ parameters.reponame }}
-          NAMESPACE=${{ parameters.namespace }}
-          PORT=${{ parameters.port }}
-          REPO_URL=${{ parameters.repoUrl }}
-          AZURE_CLIENT_ID=${{ parameters.AZURE_CLIENT_ID }}
-          AZURE_TENANT_ID=${{ parameters.AZURE_TENANT_ID }}
-          AZURE_SUBSCRIPTION_ID=${{ parameters.AZURE_SUBSCRIPTION_ID }}
-          RG_NAME=${{ parameters.RG_NAME }}
-          ARGOCD_URL=${{ parameters.ARGOCD_URL }}
-          ARGOCD_USERNAME=${{ parameters.ARGOCD_USERNAME }}
-          ARGOCD_PASSWORD=${{ parameters.ARGOCD_PASSWORD }}
-          K8S_NAMESPACE=${{ parameters.K8S_NAMESPACE }}
+        url: ./.env.production
+        values: 
+          PROJECT_NAME: ${{ parameters.name }}
+          ORG_NAME: ${{ parameters.orgName }}
+          OWNER: ${{ parameters.owner }}
+          DESCRIPTION: ${{ parameters.description }}
+          ACR_NAME: ${{ parameters.acrName }}
+          IMAGE_REGISTRY: ${{ parameters.imageregistry }}
+          REPO_NAME: ${{ parameters.reponame }}
+          NAMESPACE: ${{ parameters.namespace }}
+          PORT: ${{ parameters.port }}
+          REPO_URL: ${{ parameters.repoUrl }}
+          AZURE_CLIENT_ID: ${{ parameters.AZURE_CLIENT_ID }}
+          AZURE_TENANT_ID: ${{ parameters.AZURE_TENANT_ID }}
+          AZURE_SUBSCRIPTION_ID: ${{ parameters.AZURE_SUBSCRIPTION_ID }}
+          RG_NAME: ${{ parameters.RG_NAME }}
+          ARGOCD_URL: ${{ parameters.ARGOCD_URL }}
+          ARGOCD_USERNAME: ${{ parameters.ARGOCD_USERNAME }}
+          ARGOCD_PASSWORD: ${{ parameters.ARGOCD_PASSWORD }}
+          K8S_NAMESPACE: ${{ parameters.K8S_NAMESPACE }}
 
     - id: github-actions-template
       name: GitHub Actions 구성 생성

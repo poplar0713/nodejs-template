@@ -1,9 +1,9 @@
 apiVersion: backstage.io/v1alpha1
 kind: Component
 metadata:
-  name: ${{ parameters.name | dump }}
-  description: ${{ parameters.description }}
+  name: ${{ values.name | dump }}
+  description: ${{ values.description }}
 spec:
   type: service
-  owner: ${{ parameters.owner }}
-  lifecycle: production
+  owner: ${{ values.owner }}
+  lifecycle: production # experimental
