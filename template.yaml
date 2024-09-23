@@ -155,9 +155,9 @@ spec:
 
     - id: create-env-file
       name: .env.production 파일 생성
-      action: write:file
+      action: fs:write
       input:
-        targetPath: ./.env.production
+        path: ./.env.production
         content: |
           PROJECT_NAME=${{ parameters.name }}
           ORG_NAME=${{ parameters.orgName }}
